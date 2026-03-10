@@ -69,10 +69,6 @@ async function handleFiles(files) {
             statusIcon.innerHTML = `<span class="material-symbols-outlined text-5xl">check_circle</span>`;
             statusIcon.classList.replace('bg-primary', 'bg-green-500');
 
-            // Store data for the trip page to consume
-            localStorage.setItem('trip_' + tripId, JSON.stringify(pictures));
-            localStorage.setItem('trip_' + tripId + '_title', tripTitle);
-
             setTimeout(() => {
                 window.location.href = '/trips/' + tripId;
             }, 2000);

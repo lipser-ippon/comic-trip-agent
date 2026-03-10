@@ -1,9 +1,5 @@
 package comictrip;
 
-import com.google.api.gax.paging.Page;
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.inject.Inject;
@@ -13,14 +9,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-
-import static comictrip.ComicTripAnalyzer.COMIC_TRIP_APP_NAME;
-import static comictrip.ComicTripAnalyzer.COMIC_TRIP_PICTURE_BUCKET;
-import static comictrip.ComicTripAnalyzer.COMIC_TRIP_USER;
 
 @Path("/")
 public class WebResource {
@@ -31,32 +20,13 @@ public class WebResource {
     @Inject
     Template trip;
 
-    public record TripSummary(String tripId, String imageUrl) {}
+    @Inject
+    TripService tripService;
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance home() {
-        Storage storage = StorageOptions.getDefaultInstance().getService();
-        String prefix = COMIC_TRIP_APP_NAME + "/" + COMIC_TRIP_USER + "/";
-        Page<Blob> blobs = storage.list(COMIC_TRIP_PICTURE_BUCKET, Storage.BlobListOption.prefix(prefix));
-
-        Map<String, String> tripToFirstImage = new LinkedHashMap<>();
-
-        for (Blob blob : blobs.iterateAll()) {
-            String name = blob.getName();
-            // name looks like: comic_trip_app/comic_trip_user/tripId/imageId.png/0
-            if (name.endsWith("/0")) {
-                String[] parts = name.split("/");
-                if (parts.length >= 5) {
-                    String tripId = parts[2];
-                    String imageUrl = "https://storage.googleapis.com/" + COMIC_TRIP_PICTURE_BUCKET + "/" + name;
-                    tripToFirstImage.putIfAbsent(tripId, imageUrl);
-                }
-            }
-        }
-
-        List<TripSummary> pastTrips = new ArrayList<>();
-        tripToFirstImage.forEach((id, url) -> pastTrips.add(new TripSummary(id, url)));
+        List<TripService.TripData> pastTrips = tripService.listTrips();
 
         return index
             .data("pageTitle", "Comic Trip | Mission Control")
@@ -67,8 +37,17 @@ public class WebResource {
     @Path("/trips/{tripId:[a-zA-Z0-9]+}")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance trip(@PathParam("tripId") String tripId) {
+        TripService.TripData tripData = tripService.getTrip(tripId);
+
+        String title = tripData != null && tripData.title() != null
+            ? tripData.title() : "Trip " + tripId;
+        List<TripService.PictureData> pictures = tripData != null
+            ? tripData.pictures() : List.of();
+
         return trip
-                .data("pageTitle", "Comic Trip | " + tripId)
-                .data("tripId", tripId);
+            .data("pageTitle", "Comic Trip | " + title)
+            .data("tripId", tripId)
+            .data("tripTitle", title)
+            .data("pictures", pictures);
     }
 }

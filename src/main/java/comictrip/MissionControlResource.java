@@ -26,6 +26,9 @@ public class MissionControlResource {
     @Inject
     ComicTripAnalyzer analyzer;
 
+    @Inject
+    TripService tripService;
+
     @POST
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -78,7 +81,10 @@ public class MissionControlResource {
 
             String tripTitle = createTripName(comicOutputs);
 
-            return Response.ok(Map.of("tripId", tripId, "title", tripTitle, "pictures", comicOutputs)).build();        } catch (Exception e) {
+            tripService.saveTrip(tripId, tripTitle, comicOutputs);
+
+            return Response.ok(Map.of("tripId", tripId, "title", tripTitle, "pictures", comicOutputs)).build();
+        } catch (Exception e) {
             return Response.serverError().entity("Parallel execution failed: " + e.getMessage()).build();
         }
     }

@@ -16,16 +16,39 @@
                             class="absolute -top-6 -left-6 bg-primary text-white text-xs font-black px-2 py-1 uppercase italic rounded">
                             New Issue!</div>
                         <h1 id="trip-title" class="text-slate-900 text-4xl md:text-6xl font-black uppercase italic tracking-tighter">
-                            TRIP: {tripId}
+                            {tripTitle}
                         </h1>
                     </div>
                 </div>
 
                 <!-- Comic Grid Layout -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="comic-grid">
+                    {#if pictures.isEmpty}
                     <div class="col-span-full text-center py-10">
-                        <p class="text-xl font-bold animate-pulse">Loading mission data...</p>
+                        <p class="text-xl font-bold">No panels found for this trip.</p>
                     </div>
+                    {#else}
+                    {#for pic in pictures}
+                    <div class="comic-border-sm bg-white dark:bg-slate-900 relative group overflow-hidden flex flex-col">
+                        <div class="aspect-[4/5] relative overflow-hidden cursor-pointer" onclick="openLightbox('{pic.imageUrl}')">
+                            <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                                src="{pic.imageUrl}" alt="{pic.locationShort}" />
+                            <div class="absolute top-4 left-4">
+                                <div class="poi-bubble bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-primary flex items-center gap-1 shadow-md">
+                                    <span class="material-symbols-outlined text-xs">location_on</span> {pic.locationShort}
+                                </div>
+                            </div>
+                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-white text-5xl drop-shadow-md">zoom_in</span>
+                            </div>
+                        </div>
+                        <div class="caption-box p-4 bg-yellow-50 dark:bg-slate-800 flex-1">
+                            <h3 class="text-lg font-black uppercase italic text-slate-900 dark:text-white mb-1">{pic.locationShort}</h3>
+                            <p class="text-sm font-medium leading-tight text-slate-700 dark:text-slate-300">{pic.description}</p>
+                        </div>
+                    </div>
+                    {/for}
+                    {/if}
                 </div>
 
                 <!-- Pagination -->
@@ -65,59 +88,6 @@
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeLightbox();
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const tripId = "{tripId}";
-            const grid = document.getElementById('comic-grid');
-            const storedData = localStorage.getItem('trip_' + tripId);
-            const storedTitle = localStorage.getItem('trip_' + tripId + '_title');
-            
-            if (storedTitle) {
-                document.getElementById('trip-title').innerText = storedTitle.replace(/^"(.*)"$/, '$1'); // Strip quotes if any
-            }
-            
-            if (storedData) {
-                const pictures = JSON.parse(storedData);
-                grid.innerHTML = ''; 
-                
-                if (pictures.length === 0) {
-                    grid.innerHTML = '<div class="col-span-full text-center"><p class="text-lg">No panels found for this trip.</p></div>';
-                    return;
-                }
-
-                pictures.forEach((pic, index) => {
-                    const layouts = ['', 'lg:mt-6', '', 'lg:-mt-6'];
-                    const mtClass = layouts[index % layouts.length];
-                    
-                    const location = pic.details?.location || 'Unknown Location';
-                    const title = location.split(',')[0]; 
-                    const desc = pic.details?.description || '';
-                    const imgUrl = pic.image?.name || ''; 
-                    
-                    const panelHtml = '<div class="comic-border-sm bg-white dark:bg-slate-900 relative group overflow-hidden flex flex-col ' + mtClass + '">' +
-                            '<div class="aspect-[4/5] relative overflow-hidden cursor-pointer" onclick="openLightbox(\'' + imgUrl + '\')">' +
-                                '<img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"' +
-                                    ' src="' + imgUrl + '" alt="' + title + '" />' +
-                                '<div class="absolute top-4 left-4">' +
-                                    '<div class="poi-bubble bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-primary flex items-center gap-1 shadow-md">' +
-                                        '<span class="material-symbols-outlined text-xs">location_on</span> ' + title +
-                                    '</div>' +
-                                '</div>' +
-                                '<div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">' +
-                                    '<span class="material-symbols-outlined text-white text-5xl drop-shadow-md">zoom_in</span>' +
-                                '</div>' +
-                            '</div>' +
-                            '<div class="caption-box p-4 bg-yellow-50 dark:bg-slate-800 flex-1">' +
-                                '<h3 class="text-lg font-black uppercase italic text-slate-900 dark:text-white mb-1">' + title + '</h3>' +
-                                '<p class="text-sm font-medium leading-tight text-slate-700 dark:text-slate-300">' + desc + '</p>' +
-                            '</div>' +
-                        '</div>';
-                    grid.innerHTML += panelHtml;
-                });
-            } else {
-                grid.innerHTML = '<div class="col-span-full text-center text-red-500 font-bold"><p>Error: Trip data not found. Please upload your photos again.</p></div>';
-            }
         });
     </script>
 </body>
