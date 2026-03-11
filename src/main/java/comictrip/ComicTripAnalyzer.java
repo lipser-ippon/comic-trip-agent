@@ -35,6 +35,7 @@ import com.google.genai.types.Part;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.jboss.logging.Logger;
 import org.sqids.Sqids;
 
 import java.io.IOException;
@@ -50,6 +51,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class ComicTripAnalyzer {
+
+    private static final Logger LOGGER = Logger.getLogger(ComicTripAnalyzer.class);
 
     @ConfigProperty(name = "comic-trip.picture.bucket", defaultValue = "comic-trip-picture-bucket")
     String comicTripPictureBucket;
@@ -202,6 +205,7 @@ public class ComicTripAnalyzer {
                 ComicOutput.Details.class);
             return new ComicOutput(tripId, image, details, pointsOfInterest);
         } catch (Exception e) {
+            LOGGER.error("Failed to parse comic trip details", e);
             return new ComicOutput(tripId, image,
                 new ComicOutput.Details(descriptionAndLocation, descriptionAndLocation),
                 pointsOfInterest);
@@ -219,7 +223,7 @@ public class ComicTripAnalyzer {
                 comicImageBytes,
                 StandardOpenOption.CREATE);
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            LOGGER.error("Failed to save file locally", e);
         }
     }
 
@@ -227,13 +231,13 @@ public class ComicTripAnalyzer {
         // Path input = Path.of("src/main/resources/istanbul/galata-tower.jpg");
         Path input = Path.of("src/main/resources/istanbul/PXL_20250314_075430647.jpg");
         byte[] originalImageBytes = Files.readAllBytes(input);
-        System.out.println("Image bytes read: " + originalImageBytes.length);
+        LOGGER.infof("Image bytes read: %d", originalImageBytes.length);
 
         Sqids sqids = Sqids.builder().build();
         String tripId = sqids.encode(List.of(System.currentTimeMillis()));
         ComicOutput comicOutput = new ComicTripAnalyzer().analyzeComic(originalImageBytes, "image/png", tripId);
 
-        System.out.println("comicOutput = " + comicOutput);
+        LOGGER.infof("comicOutput = %s", comicOutput);
         System.exit(0);
     }
 }

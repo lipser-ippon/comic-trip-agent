@@ -23,6 +23,7 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.cloud.firestore.WriteResult;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +33,8 @@ import java.util.concurrent.ExecutionException;
 
 @ApplicationScoped
 public class TripService {
+
+    private static final Logger LOGGER = Logger.getLogger(TripService.class);
 
     private static final String DATABASE_ID = "comic-trip";
     private static final String COLLECTION_NAME = "trips";
@@ -70,8 +73,13 @@ public class TripService {
         try {
             ApiFuture<WriteResult> result = docRef.set(tripData);
             result.get(); // block until write completes
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to save trip to Firestore", e);
+        } catch (InterruptedException e) {
+            LOGGER.error("Failed to save trip to Firestore due to interruption", e);
+            Thread.currentThread().interrupt();
+            throw new FirestorePersistenceException("Interrupted while saving trip to Firestore", e);
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to save trip to Firestore", e);
+            throw new FirestorePersistenceException("Failed to save trip to Firestore", e);
         }
     }
 
@@ -88,8 +96,13 @@ public class TripService {
                 return toTripData(tripId, doc);
             }
             return null;
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to get trip from Firestore", e);
+        } catch (InterruptedException e) {
+            LOGGER.error("Failed to get trip from Firestore due to interruption", e);
+            Thread.currentThread().interrupt();
+            throw new FirestorePersistenceException("Interrupted while getting trip from Firestore", e);
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to get trip from Firestore", e);
+            throw new FirestorePersistenceException("Failed to get trip from Firestore", e);
         }
     }
 
@@ -105,8 +118,13 @@ public class TripService {
                 trips.add(toTripData(doc.getId(), doc));
             }
             return trips;
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException("Failed to list trips from Firestore", e);
+        } catch (InterruptedException e) {
+            LOGGER.error("Failed to list trips from Firestore due to interruption", e);
+            Thread.currentThread().interrupt();
+            throw new FirestorePersistenceException("Interrupted while listing trips from Firestore", e);
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to list trips from Firestore", e);
+            throw new FirestorePersistenceException("Failed to list trips from Firestore", e);
         }
     }
 

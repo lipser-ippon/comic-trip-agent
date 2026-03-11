@@ -22,6 +22,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.jboss.logging.Logger;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.jspecify.annotations.Nullable;
@@ -36,6 +37,8 @@ import java.util.concurrent.Executors;
 
 @Path("/api/mission-control")
 public class MissionControlResource {
+
+    private static final Logger LOGGER = Logger.getLogger(MissionControlResource.class);
 
     @Inject
     ComicTripAnalyzer analyzer;
@@ -72,11 +75,13 @@ public class MissionControlResource {
                             : "image/jpeg";
                         return new ComicOutput.Image(fileName, fileBytes, mimeType);
                     } catch (IOException e) {
+                        LOGGER.error("Failed to read file part", e);
                         throw new RuntimeException("Failed to read file part", e);
                     }
                 })
                 .toList();
         } catch (Exception e) {
+            LOGGER.error("Error during file ingestion", e);
             return Response.serverError().entity("Error during file ingestion: " + e.getMessage()).build();
         }
 
@@ -99,6 +104,7 @@ public class MissionControlResource {
 
             return Response.ok(Map.of("tripId", tripId, "title", tripTitle, "pictures", comicOutputs)).build();
         } catch (Exception e) {
+            LOGGER.error("Parallel execution failed", e);
             return Response.serverError().entity("Parallel execution failed: " + e.getMessage()).build();
         }
     }
@@ -126,7 +132,7 @@ public class MissionControlResource {
                 com.google.genai.types.GenerateContentConfig.builder().build()
             ).text();
         } catch (Exception ex) {
-            System.err.println("Failed to generate trip title: " + ex.getMessage());
+            LOGGER.error("Failed to generate trip title", ex);
         }
         return tripTitle;
     }
