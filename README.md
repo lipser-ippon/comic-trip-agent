@@ -1,6 +1,8 @@
 # Comic Trip Agent
 
-The Comic Trip travel agent is an application that analyzes your travel photos 
+![Comic Trip Agent frontpage](comic-trip-screenshot.png)
+
+The **Comic Trip** travel agent is an application that analyzes your travel photos 
 and transforms them into a vibrant pop-art comic strip experience. 
 It not only stylizes your pictures but also intelligently 
 identifies the location and provides nearby points of interest.

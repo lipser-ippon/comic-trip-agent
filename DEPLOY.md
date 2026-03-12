@@ -1,7 +1,10 @@
 # Deployment Guide: Comic Trip
 
-This guide details the process for deploying the Comic Trip Quarkus and ADK Java application to Google Cloud Run 
-directly from source, bypassing Cloud Build (`--no-build` flag), and utilizing Secret Manager for the Gemini API key.
+This guide details the process for deploying the Comic Trip Quarkus & ADK Java application to Google Cloud Run 
+[directly from source](https://docs.cloud.google.com/run/docs/deploying-source-code#deploy_without_build), 
+bypassing Cloud Build (`--no-build` flag), running a self-executable JAR 
+on a [base Java image](https://docs.cloud.google.com/run/docs/configuring/services/runtime-base-images#java),
+and utilizing Secret Manager for the Gemini API key.
 
 ## Prerequisites
 
