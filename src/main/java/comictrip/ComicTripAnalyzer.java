@@ -100,7 +100,7 @@ public class ComicTripAnalyzer {
                 .build())
             .outputKey(OUTPUT_KEY_COMIC_ILLUSTRATION)
             .afterModelCallback((callbackContext, llmResponse) ->
-                llmResponse.content()
+                Maybe.fromOptional(llmResponse.content()
                     .flatMap(Content::parts)
                     .stream()
                     .flatMap(List::stream)
@@ -114,14 +114,10 @@ public class ComicTripAnalyzer {
                         callbackContext.saveArtifact(imageId + ".png", part)
                             .blockingAwait();
 
-                        return Optional.of(imageId);
-                    }).map(imageId ->
-                        Maybe.just(llmResponse.toBuilder()
-                            .content(
-                                Content.fromParts(
-                                    Part.fromText(imageId)))
-                            .build())
-                    ).orElse(Maybe.empty())
+                        return Optional.of(llmResponse.toBuilder()
+                            .content(Content.fromParts(Part.fromText(imageId)))
+                            .build());
+                    }))
             ).build();
 
         LlmAgent poiGoogleMapsAgent = LlmAgent.builder()
