@@ -25,11 +25,11 @@ import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
-import java.nio.file.Files;
 import org.jspecify.annotations.Nullable;
 import org.sqids.Sqids;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -115,11 +115,10 @@ public class MissionControlResource {
         try {
             var client = Client.builder().build();
             tripTitle = client.models.generateContent(
-                "gemini-3.1-flash-lite-preview", """
-                    Give a short, catchy, comic-book style title (max 5 words)
-                    for a trip based on these photo descriptions.
-                    Output ONLY the title:
-                    """ + combinedDescriptions,
+                "gemini-2.5-flash-lite", """
+                Donne un titre court et accrocheur, dans le style bande dessinée (max 5 mots), pour un voyage basé sur ces descriptions de photos.
+               Affiche UNIQUEMENT le titre :
+               """ + combinedDescriptions,
                 com.google.genai.types.GenerateContentConfig.builder().build()
             ).text();
         } catch (Exception ex) {

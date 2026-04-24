@@ -67,32 +67,26 @@ public class ComicTripAnalyzer {
     public ComicOutput analyzeComic(byte[] imageBytes, String mimeType, String tripId) {
 
         LlmAgent comicTripAgent = LlmAgent.builder()
-            .model("gemini-3-flash-preview")
+            .model("gemini-2.5-flash")
             .name("picture_analyzer_agent")
             .instruction("""
-                Analyze the picture and return:
-                - a detailed description of the content of the picture
-                - the location where this picture was probably taken
-                
-                Return the result as JSON, without any commentary
-                or Markdown code block notation, in the form:
-                
-                {"description": "The Eiffel tower from the Champs de Mars on a sunny day",
-                 "location": "Eiffel tower, Paris, France"}
+                    Analyse l'image et retourne :
+                    - une description détaillée du contenu de l'image
+                    - le lieu où cette photo a probablement été prise
+                    
+                    Retourne le résultat au format JSON, sans aucun commentaire ni balise de bloc de code Markdown, sous la forme :
+                    
+                    {"description": "La tour Eiffel depuis le Champ de Mars par une journée ensoleillée",
+                    "location": "Tour Eiffel, Paris, France"}
                 """)
             .outputKey(OUTPUT_KEY_DESCRIPTION_AND_LOCATION)
             .build();
 
         LlmAgent comicCreatorAgent = LlmAgent.builder()
-            .model("gemini-3.1-flash-image-preview")
+            .model("gemini-2.5-flash-image")
             .name("comic_illustrator_agent")
             .instruction("""
-                Turn this photography into a pop-art comic panel,
-                with thick black outlines, colors drops,
-                splashes and wide strokes or geometrical shapes.
-                Use halftone textures for non-primary colored areas,
-                and a vintage muted color palette.
-                A caption should describe the location, as given in:
+                Transforme cette photographie en une case de bande dessinée pop-art, avec des contours noirs épais, des gouttes de couleur, des éclaboussures et des traits larges ou des formes géométriques. Utilise des textures en simili-gravure (halftone) pour les zones qui ne sont pas en couleurs primaires, ainsi qu'une palette de couleurs vintage aux tons atténués. Une légende devra décrire le lieu, tel qu'indiqué dans :
                 {description_and_location}
                 """)
             .generateContentConfig(GenerateContentConfig.builder()

@@ -58,6 +58,7 @@ gcloud beta run deploy comic-trip \
   --base-image google-22/java21 \
   --command java \
   --args="-jar,comic-trip-agent-1.0-SNAPSHOT-runner.jar" \
+  --set-env-vars="GOOGLE_CLOUD_LOCATION=europe-west1,GOOGLE_CLOUD_PROJECT=prj-s-sandbox-lipser-5013,GOOGLE_GENAI_USE_VERTEXAI=True" \
   --allow-unauthenticated
 ```
 
