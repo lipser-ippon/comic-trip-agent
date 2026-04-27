@@ -5,6 +5,7 @@ import com.google.cloud.firestore.FirestoreOptions;
 import com.google.genai.Client;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
+import org.sqids.Sqids; // Added import
 
 @ApplicationScoped
 public class GoogleCloudProducers {
@@ -25,5 +26,11 @@ public class GoogleCloudProducers {
     @ApplicationScoped
     public Client genaiClient() {
         return Client.builder().build();
+    }
+
+    @Produces
+    @ApplicationScoped
+    public Sqids sqids() { // Added producer method
+        return Sqids.builder().build();
     }
 }

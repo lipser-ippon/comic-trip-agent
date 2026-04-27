@@ -14,6 +14,7 @@
 
 package comictrip;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.adk.agents.LlmAgent;
 import com.google.adk.agents.ParallelAgent;
@@ -34,9 +35,9 @@ import com.google.genai.types.Part;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-import org.sqids.Sqids;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,12 +46,15 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 
 @ApplicationScoped
 public class ComicTripAnalyzer {
 
     private static final Logger LOGGER = Logger.getLogger(ComicTripAnalyzer.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    @Inject
+    IdGenerator idGenerator;
 
     @ConfigProperty(name = "comic-trip.picture.bucket", defaultValue = "comic-trip-picture-bucket")
     String comicTripPictureBucket;
@@ -112,7 +116,7 @@ public class ComicTripAnalyzer {
 
                 Part part = imagePart.get();
                 byte[] comicImageBytes = part.inlineData().get().data().get();
-                String imageId = generateId();
+                String imageId = idGenerator.generateId();
                 saveFileLocally(imageId, comicImageBytes);
 
                 try {
@@ -195,27 +199,21 @@ public class ComicTripAnalyzer {
         String imageId = (String) state.get(OUTPUT_KEY_COMIC_ILLUSTRATION);
 
         ComicOutput.Image image = new ComicOutput.Image(imageId, null, "image/png");
-        ObjectMapper objectMapper = new ObjectMapper();
 
         try {
             String jsonToParse = descriptionAndLocation.trim();
             if (jsonToParse.startsWith("```")) {
                 jsonToParse = jsonToParse.replaceAll("^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").trim();
             }
-            ComicOutput.Details details = objectMapper.readValue(jsonToParse,
+            ComicOutput.Details details = OBJECT_MAPPER.readValue(jsonToParse,
                 ComicOutput.Details.class);
             return new ComicOutput(tripId, image, details, pointsOfInterest);
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             LOGGER.error("Failed to parse comic trip details", e);
             return new ComicOutput(tripId, image,
                 new ComicOutput.Details(descriptionAndLocation, descriptionAndLocation),
                 pointsOfInterest);
         }
-    }
-
-    private static String generateId() {
-        Sqids sqids = Sqids.builder().build();
-        return sqids.encode(List.of(new Random().nextLong(0, Integer.MAX_VALUE)));
     }
 
     private static void saveFileLocally(String imageId, byte[] comicImageBytes) {
