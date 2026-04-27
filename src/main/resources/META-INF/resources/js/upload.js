@@ -54,8 +54,8 @@ async function handleFiles(files) {
     // UI Feedback: Loading
     uploadBtn.disabled = true;
     uploadBtn.classList.add('opacity-50', 'cursor-not-allowed');
-    statusTitle.innerText = files.length > 1 ? "Processing Squad..." : "Processing...";
-    statusMsg.innerText = "Our AI illustrators are at work!";
+    statusTitle.innerText = files.length > 1 ? "Traitement de l'équipe..." : "Traitement en cours...";
+    statusMsg.innerText = "Nos illustrateurs IA sont au travail !";
     statusIcon.classList.add('animate-bounce');
 
     const formData = new FormData();
@@ -77,8 +77,8 @@ async function handleFiles(files) {
             const tripTitle = data.title || ('Trigp ' + tripId);
             const pictures = data.pictures || [];
 
-            statusTitle.innerText = "Success!";
-            statusMsg.innerText = `${pictures.length} comic panels generated! Redirecting...`;
+            statusTitle.innerText = "Succès !";
+            statusMsg.innerText = `${pictures.length} planches de bande dessinée générées ! Redirection...`;
             statusIcon.classList.remove('animate-bounce');
             statusIcon.innerHTML = `<span class="material-symbols-outlined text-5xl">check_circle</span>`;
             statusIcon.classList.replace('bg-primary', 'bg-green-500');
@@ -92,8 +92,8 @@ async function handleFiles(files) {
         }
     } catch (error) {
         console.error('Upload error:', error);
-        statusTitle.innerText = "Abort Mission!";
-        statusMsg.innerText = `Error: ${error.message}. Try again, hero.`;
+        statusTitle.innerText = "Mission annulée !";
+        statusMsg.innerText = `Erreur : ${error.message}. Réessayez, héros.`;
         statusIcon.classList.remove('animate-bounce');
         statusIcon.innerHTML = `<span class="material-symbols-outlined text-5xl">error</span>`;
         statusIcon.classList.replace('bg-primary', 'bg-red-500');

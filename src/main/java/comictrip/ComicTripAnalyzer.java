@@ -188,10 +188,6 @@ public class ComicTripAnalyzer {
         String descriptionAndLocation = (String) state.get(OUTPUT_KEY_DESCRIPTION_AND_LOCATION);
         String imageId = (String) state.get(OUTPUT_KEY_COMIC_ILLUSTRATION);
 
-        String imageUrl = "";
-        // The imageUrl variable is no longer needed to construct ComicOutput.Image.
-        // It was used to get a public URL for GCS, but the proxy handles that now.
-
         ComicOutput.Image image = new ComicOutput.Image(imageId, null, "image/png");
         ObjectMapper objectMapper = new ObjectMapper();
 
