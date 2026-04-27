@@ -56,12 +56,13 @@ public class TripService {
 
         List<Map<String, Object>> pictures = new ArrayList<>();
         for (ComicOutput output : comicOutputs) {
+            String imageName = output.image() != null ? output.image().name() : "";
             Map<String, Object> pic = new HashMap<>();
-            pic.put("fileName", tripId);
+            pic.put("fileName", imageName);
             pic.put("description", output.details() != null ? output.details().description() : "");
             pic.put("location", output.details() != null ? output.details().location() : "");
             pic.put("mimeType", output.image() != null ? output.image().mimeType() : "");
-            pic.put("imageUrl", output.image() != null ? output.image().name() : "");
+            pic.put("imageUrl", String.format("/images/%s/%s", tripId, imageName));
             pic.put("pointsOfInterest", output.pointsOfInterest() != null ? output.pointsOfInterest() : "");
             pictures.add(pic);
         }
@@ -136,12 +137,29 @@ public class TripService {
         List<PictureData> pictures = new ArrayList<>();
         if (rawPictures != null) {
             for (Map<String, Object> raw : rawPictures) {
+                String imageUrl = (String) raw.getOrDefault("imageUrl", "");
+                if (imageUrl.startsWith("https://storage.googleapis.com/")) {
+                    // Old format: full GCS URL → convert to proxy URL
+                    // https://storage.googleapis.com/{bucket}/comic_trip_app/comic_trip_user/{tripId}/{imageId}.png/0
+                    int bucketEnd = imageUrl.indexOf('/', "https://storage.googleapis.com/".length());
+                    if (bucketEnd != -1) {
+                        String[] parts = imageUrl.substring(bucketEnd + 1).split("/");
+                        // parts: [comic_trip_app, comic_trip_user, tripId, imageId.png, 0]
+                        if (parts.length >= 4) {
+                            String imageName = parts[3].replace(".png", "");
+                            imageUrl = String.format("/images/%s/%s", tripId, imageName);
+                        }
+                    }
+                } else if (imageUrl.startsWith("/images/") && imageUrl.indexOf('/', 8) == -1) { // 8 is the length of "/images/"
+                    String oldImageName = imageUrl.substring("/images/".length());
+                    imageUrl = String.format("/images/%s/%s", tripId, oldImageName);
+                }
                 pictures.add(new PictureData(
                     (String) raw.getOrDefault("fileName", ""),
                     (String) raw.getOrDefault("description", ""),
                     (String) raw.getOrDefault("location", ""),
                     (String) raw.getOrDefault("mimeType", ""),
-                    (String) raw.getOrDefault("imageUrl", ""),
+                    imageUrl,
                     (String) raw.getOrDefault("pointsOfInterest", "")
                 ));
             }

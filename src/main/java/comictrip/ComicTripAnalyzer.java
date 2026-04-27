@@ -27,7 +27,6 @@ import com.google.adk.runner.Runner;
 import com.google.adk.sessions.InMemorySessionService;
 import com.google.adk.sessions.Session;
 import com.google.adk.sessions.SessionKey;
-import com.google.adk.tools.GoogleMapsTool;
 import com.google.cloud.storage.StorageOptions;
 import com.google.genai.types.Content;
 import com.google.genai.types.GenerateContentConfig;
@@ -35,6 +34,7 @@ import com.google.genai.types.Part;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.sqids.Sqids;
 
@@ -46,8 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class ComicTripAnalyzer {
@@ -118,19 +116,14 @@ public class ComicTripAnalyzer {
             .name("points_of_interest_agent")
             .model("gemini-2.5-flash")
             .instruction("""
-                Given the location in:
-                {description_and_location}
-                
-                Please list points of interest (POI)
-                in the area no further than a kilometer away
-                using the `google_maps` tool.
-                
-                Each POI should have a name and a description.
-                
-                Don't mention distances in your response.
-                And don't start with introductory text for the list.
+                    Étant donné l'emplacement à Lille, France
+                    
+                    Dresse une liste des points d'intérêt (POI) dans les environs, à une distance maximale d'un kilomètre.
+
+                    Chaque POI doit comporter un nom et une description.
+
+                    Ne mentionne pas les distances dans ta réponse. Ne commence pas la liste par un texte d'introduction.
                 """)
-            .tools(new GoogleMapsTool())
             .outputKey(OUTPUT_KEY_POINTS_OF_INTEREST)
             .build();
 
@@ -187,19 +180,18 @@ public class ComicTripAnalyzer {
         String imageId = (String) state.get(OUTPUT_KEY_COMIC_ILLUSTRATION);
 
         String imageUrl = "";
-        if (imageId != null && !imageId.isEmpty()) {
-            imageUrl = "https://storage.googleapis.com/" + comicTripPictureBucket +
-                "/" + COMIC_TRIP_APP_NAME +
-                "/" + COMIC_TRIP_USER +
-                "/" + tripId +
-                "/" + imageId + ".png/0";
-        }
+        // The imageUrl variable is no longer needed to construct ComicOutput.Image.
+        // It was used to get a public URL for GCS, but the proxy handles that now.
 
-        ComicOutput.Image image = new ComicOutput.Image(imageUrl, null, "image/png");
+        ComicOutput.Image image = new ComicOutput.Image(imageId, null, "image/png");
         ObjectMapper objectMapper = new ObjectMapper();
 
         try {
-            ComicOutput.Details details = objectMapper.readValue(descriptionAndLocation,
+            String jsonToParse = descriptionAndLocation.trim();
+            if (jsonToParse.startsWith("```")) {
+                jsonToParse = jsonToParse.replaceAll("^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").trim();
+            }
+            ComicOutput.Details details = objectMapper.readValue(jsonToParse,
                 ComicOutput.Details.class);
             return new ComicOutput(tripId, image, details, pointsOfInterest);
         } catch (Exception e) {
@@ -223,19 +215,5 @@ public class ComicTripAnalyzer {
         } catch (IOException e) {
             LOGGER.error("Failed to save file locally", e);
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        // Path input = Path.of("src/main/resources/istanbul/galata-tower.jpg");
-        Path input = Path.of("src/main/resources/istanbul/PXL_20250314_075430647.jpg");
-        byte[] originalImageBytes = Files.readAllBytes(input);
-        LOGGER.infof("Image bytes read: %d", originalImageBytes.length);
-
-        Sqids sqids = Sqids.builder().build();
-        String tripId = sqids.encode(List.of(System.currentTimeMillis()));
-        ComicOutput comicOutput = new ComicTripAnalyzer().analyzeComic(originalImageBytes, "image/png", tripId);
-
-        LOGGER.infof("comicOutput = %s", comicOutput);
-        System.exit(0);
     }
 }
