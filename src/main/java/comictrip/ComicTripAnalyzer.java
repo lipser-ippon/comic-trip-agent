@@ -71,9 +71,9 @@ public class ComicTripAnalyzer {
                     Analyse l'image et retourne :
                     - une description détaillée du contenu de l'image
                     - le lieu où cette photo a probablement été prise
-                    
+                
                     Retourne le résultat au format JSON, sans aucun commentaire ni balise de bloc de code Markdown, sous la forme :
-                    
+                
                     {"description": "La tour Eiffel depuis le Champ de Mars par une journée ensoleillée",
                     "location": "Tour Eiffel, Paris, France"}
                 """)

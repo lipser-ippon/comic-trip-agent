@@ -40,9 +40,7 @@ public class GcsProxyResource {
             }
 
             // Streaming direct du contenu vers la réponse HTTP
-            Response.ResponseBuilder response = Response.ok((jakarta.ws.rs.core.StreamingOutput) output -> {
-                blob.downloadTo(output);
-            });
+            Response.ResponseBuilder response = Response.ok((jakarta.ws.rs.core.StreamingOutput) blob::downloadTo);
 
             return response
                 .type(blob.getContentType())

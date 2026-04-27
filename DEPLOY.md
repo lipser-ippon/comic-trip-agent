@@ -110,7 +110,7 @@ Visit this URL in your browser to verify the Comic Trip application is successfu
 
 ## In a nutshell
 ```bash
-./mvnw clean package -Dquarkus.package.type=uber-jar -DskipTests
+./mvnw clean package -Dquarkus.package.type=uber-jar
 mkdir -p target/deploy-staging
 cp target/comic-trip-agent-1.0-SNAPSHOT-runner.jar target/deploy-staging/
 gcloud beta run deploy comic-trip \

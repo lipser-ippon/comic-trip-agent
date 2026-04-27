@@ -54,18 +54,18 @@ public class TripService {
     public void saveTrip(String tripId, String title, List<ComicOutput> comicOutputs) {
         DocumentReference docRef = firestore.collection(COLLECTION_NAME).document(tripId);
 
-        List<Map<String, Object>> pictures = new ArrayList<>();
-        for (ComicOutput output : comicOutputs) {
-            String imageName = output.image() != null ? output.image().name() : "";
-            Map<String, Object> pic = new HashMap<>();
-            pic.put("fileName", imageName);
-            pic.put("description", output.details() != null ? output.details().description() : "");
-            pic.put("location", output.details() != null ? output.details().location() : "");
-            pic.put("mimeType", output.image() != null ? output.image().mimeType() : "");
-            pic.put("imageUrl", String.format("/images/%s/%s", tripId, imageName));
-            pic.put("pointsOfInterest", output.pointsOfInterest() != null ? output.pointsOfInterest() : "");
-            pictures.add(pic);
-        }
+        List<Map<String, Object>> pictures = comicOutputs.stream()
+                .map(output -> {
+                    String imageName = output.image() != null ? output.image().name() : "";
+                    Map<String, Object> pic = new HashMap<>();
+                    pic.put("fileName", imageName);
+                    pic.put("description", output.details() != null ? output.details().description() : "");
+                    pic.put("location", output.details() != null ? output.details().location() : "");
+                    pic.put("mimeType", output.image() != null ? output.image().mimeType() : "");
+                    pic.put("imageUrl", String.format("/images/%s/%s", tripId, imageName));
+                    pic.put("pointsOfInterest", output.pointsOfInterest() != null ? output.pointsOfInterest() : "");
+                    return pic;
+                }).toList();
 
         Map<String, Object> tripData = new HashMap<>();
         tripData.put("title", title);

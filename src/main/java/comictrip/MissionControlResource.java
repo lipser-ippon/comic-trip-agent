@@ -102,8 +102,7 @@ public class MissionControlResource {
 
     private static String generateId() {
         Sqids sqids = Sqids.builder().build();
-        String tripId = sqids.encode(List.of(new Random().nextLong(0, Integer.MAX_VALUE)));
-        return tripId;
+        return sqids.encode(List.of(new Random().nextLong(0, Integer.MAX_VALUE)));
     }
 
     private static @Nullable String createTripName(List<ComicOutput> results) {
@@ -112,14 +111,13 @@ public class MissionControlResource {
             .collect(java.util.stream.Collectors.joining("\n"));
 
         String tripTitle = "Unknown Adventure";
-        try {
-            var client = Client.builder().build();
+        try (var client = Client.builder().build()) {
             tripTitle = client.models.generateContent(
-                "gemini-2.5-flash-lite", """
-                Donne un titre court et accrocheur, dans le style bande dessinée (max 5 mots), pour un voyage basé sur ces descriptions de photos.
-               Affiche UNIQUEMENT le titre :
-               """ + combinedDescriptions,
-                com.google.genai.types.GenerateContentConfig.builder().build()
+                    "gemini-2.5-flash-lite", """
+                             Donne un titre court et accrocheur, dans le style bande dessinée (max 5 mots), pour un voyage basé sur ces descriptions de photos.
+                            Affiche UNIQUEMENT le titre :
+                            """ + combinedDescriptions,
+                    com.google.genai.types.GenerateContentConfig.builder().build()
             ).text();
         } catch (Exception ex) {
             LOGGER.error("Failed to generate trip title", ex);
