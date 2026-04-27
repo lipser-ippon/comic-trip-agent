@@ -91,32 +91,41 @@ public class ComicTripAnalyzer {
                 .responseModalities("IMAGE")
                 .build())
             .outputKey(OUTPUT_KEY_COMIC_ILLUSTRATION)
-            .afterModelCallback((callbackContext, llmResponse) ->
-                Maybe.fromOptional(llmResponse.content()
+            .afterModelCallback((callbackContext, llmResponse) -> {
+                Optional<Part> imagePart = llmResponse.content()
                     .flatMap(Content::parts)
                     .stream()
                     .flatMap(List::stream)
                     .filter(part -> part.inlineData().isPresent())
-                    .findFirst()
-                    .flatMap(part -> {
-                        byte[] comicImageBytes = part.inlineData().get().data().get();
-                        String imageId = generateId();
-                        saveFileLocally(imageId, comicImageBytes);
+                    .findFirst();
 
-                        callbackContext.saveArtifact(imageId + ".png", part)
-                            .blockingAwait();
+                if (imagePart.isEmpty()) {
+                    LOGGER.warn("comic_illustrator_agent: aucune donnée image inline dans la réponse");
+                    return Maybe.empty();
+                }
 
-                        return Optional.of(llmResponse.toBuilder()
-                            .content(Content.fromParts(Part.fromText(imageId)))
-                            .build());
-                    }))
-            ).build();
+                Part part = imagePart.get();
+                byte[] comicImageBytes = part.inlineData().get().data().get();
+                String imageId = generateId();
+                saveFileLocally(imageId, comicImageBytes);
+
+                try {
+                    callbackContext.saveArtifact(imageId + ".png", part).blockingAwait();
+                    LOGGER.infof("Image comic sauvegardée sur GCS : %s.png", imageId);
+                } catch (Exception e) {
+                    LOGGER.errorf(e, "Échec de la sauvegarde GCS : %s.png", imageId);
+                }
+
+                return Maybe.just(llmResponse.toBuilder()
+                    .content(Content.fromParts(Part.fromText(imageId)))
+                    .build());
+            }).build();
 
         LlmAgent poiGoogleMapsAgent = LlmAgent.builder()
             .name("points_of_interest_agent")
             .model("gemini-2.5-flash")
             .instruction("""
-                    Étant donné l'emplacement à Lille, France
+                    Étant donné l'emplacement à {description_and_location}
                     
                     Dresse une liste des points d'intérêt (POI) dans les environs, à une distance maximale d'un kilomètre.
 
