@@ -2,6 +2,7 @@ package comictrip;
 
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.FirestoreOptions;
+import com.google.genai.Client;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 
@@ -18,5 +19,11 @@ public class GoogleCloudProducers {
                 .setDatabaseId(DATABASE_ID)
                 .build()
                 .getService();
+    }
+
+    @Produces
+    @ApplicationScoped
+    public Client genaiClient() {
+        return Client.builder().build();
     }
 }

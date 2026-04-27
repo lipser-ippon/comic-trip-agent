@@ -55,6 +55,12 @@ public class ComicTripAnalyzer {
     @ConfigProperty(name = "comic-trip.picture.bucket", defaultValue = "comic-trip-picture-bucket")
     String comicTripPictureBucket;
 
+    @ConfigProperty(name = "picture_analyzer_agent_model", defaultValue = "gemini-2.5-flash")
+    String pictureAnalyserAgentModel;
+
+    @ConfigProperty(name = "comic_illustrator_agent_model", defaultValue = "gemini-2.5-flash-image")
+    String comicIllustratorAgentModel;
+
     private static final String COMIC_TRIP_APP_NAME = "comic_trip_app";
     private static final String COMIC_TRIP_USER = "comic_trip_user";
 
@@ -65,7 +71,7 @@ public class ComicTripAnalyzer {
     public ComicOutput analyzeComic(byte[] imageBytes, String mimeType, String tripId) {
 
         LlmAgent comicTripAgent = LlmAgent.builder()
-            .model("gemini-2.5-flash")
+            .model(pictureAnalyserAgentModel)
             .name("picture_analyzer_agent")
             .instruction("""
                     Analyse l'image et retourne :
@@ -81,7 +87,7 @@ public class ComicTripAnalyzer {
             .build();
 
         LlmAgent comicCreatorAgent = LlmAgent.builder()
-            .model("gemini-2.5-flash-image")
+            .model(comicIllustratorAgentModel)
             .name("comic_illustrator_agent")
             .instruction("""
                 Transforme cette photographie en une case de bande dessinée pop-art, avec des contours noirs épais, des gouttes de couleur, des éclaboussures et des traits larges ou des formes géométriques. Utilise des textures en simili-gravure (halftone) pour les zones qui ne sont pas en couleurs primaires, ainsi qu'une palette de couleurs vintage aux tons atténués. Une légende devra décrire le lieu, tel qu'indiqué dans :

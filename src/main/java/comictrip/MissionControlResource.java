@@ -48,6 +48,9 @@ public class MissionControlResource {
     @Inject
     TripService tripService;
 
+    @Inject
+    Client client;
+
     @POST
     @Path("/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -60,18 +63,18 @@ public class MissionControlResource {
         List<ComicOutput.Image> filesToProcess;
         try {
             filesToProcess = files.stream()
-                .map(file -> {
-                    try {
-                        String fileName = file.fileName();
-                        byte[] fileBytes = Files.readAllBytes(file.filePath());
-                        String mimeType = file.contentType();
-                        return new ComicOutput.Image(fileName, fileBytes, mimeType);
-                    } catch (IOException e) {
-                        LOGGER.error("Failed to read file", e);
-                        throw new RuntimeException("Failed to read file", e);
-                    }
-                })
-                .toList();
+                    .map(file -> {
+                        try {
+                            String fileName = file.fileName();
+                            byte[] fileBytes = Files.readAllBytes(file.filePath());
+                            String mimeType = file.contentType();
+                            return new ComicOutput.Image(fileName, fileBytes, mimeType);
+                        } catch (IOException e) {
+                            LOGGER.error("Failed to read file", e);
+                            throw new RuntimeException("Failed to read file", e);
+                        }
+                    })
+                    .toList();
         } catch (Exception e) {
             LOGGER.error("Error during file ingestion", e);
             return Response.serverError().entity("Error during file ingestion: " + e.getMessage()).build();
@@ -81,14 +84,14 @@ public class MissionControlResource {
 
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             var futures = filesToProcess.stream()
-                .map(fileData -> CompletableFuture.supplyAsync(
-                    () -> analyzer.analyzeComic(fileData.imageBytes(), fileData.mimeType(), tripId),
-                    executor))
-                .toList();
+                    .map(fileData -> CompletableFuture.supplyAsync(
+                            () -> analyzer.analyzeComic(fileData.imageBytes(), fileData.mimeType(), tripId),
+                            executor))
+                    .toList();
 
             var comicOutputs = futures.stream()
-                .map(CompletableFuture::join)
-                .toList();
+                    .map(CompletableFuture::join)
+                    .toList();
 
             String tripTitle = createTripName(comicOutputs);
 
@@ -113,23 +116,18 @@ public class MissionControlResource {
         return sqids.encode(List.of(new Random().nextLong(0, Integer.MAX_VALUE)));
     }
 
-    private static @Nullable String createTripName(List<ComicOutput> results) {
+    private @Nullable String createTripName(List<ComicOutput> results) {
         String combinedDescriptions = results.stream()
-            .map(r -> r.details() != null && r.details().description() != null ? r.details().description() : "")
-            .collect(java.util.stream.Collectors.joining("\n"));
+                .map(r -> r.details() != null && r.details().description() != null ? r.details().description() : "")
+                .collect(java.util.stream.Collectors.joining("\n"));
 
-        String tripTitle = "Unknown Adventure";
-        try (var client = Client.builder().build()) {
-            tripTitle = client.models.generateContent(
-                    "gemini-2.5-flash-lite", """
-                             Donne un titre court et accrocheur, dans le style bande dessinée (max 5 mots), pour un voyage basé sur ces descriptions de photos.
-                            Affiche UNIQUEMENT le titre :
-                            """ + combinedDescriptions,
-                    com.google.genai.types.GenerateContentConfig.builder().build()
-            ).text();
-        } catch (Exception ex) {
-            LOGGER.error("Failed to generate trip title", ex);
-        }
+        String tripTitle = client.models.generateContent(
+                "gemini-2.5-flash-lite", """
+                         Donne un titre court et accrocheur, dans le style bande dessinée (max 5 mots), pour un voyage basé sur ces descriptions de photos.
+                        Affiche UNIQUEMENT le titre :
+                        """ + combinedDescriptions,
+                com.google.genai.types.GenerateContentConfig.builder().build()
+        ).text();
         return tripTitle;
     }
 }

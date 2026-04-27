@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 @ApplicationScoped
@@ -139,14 +140,14 @@ public class TripService {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private TripData toTripData(String tripId, DocumentSnapshot doc) {
-        String title = doc.getString("title");
-        List<Map<String, Object>> rawPictures = (List<Map<String, Object>>) doc.get("pictures");
-
+        RawPictures rawPictures = doc.toObject(RawPictures.class);
+        String title = Optional.ofNullable(rawPictures)
+                .map(RawPictures::title)
+                .orElse("Titre par défaut");
         List<PictureData> pictures = new ArrayList<>();
         if (rawPictures != null) {
-            for (Map<String, Object> raw : rawPictures) {
+            for (Map<String, Object> raw : rawPictures.pictures()) {
                 String imageUrl = (String) raw.getOrDefault("imageUrl", "");
                 if (imageUrl.startsWith("https://storage.googleapis.com/")) {
                     // Old format: full GCS URL → convert to proxy URL
