@@ -9,20 +9,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./mvnw quarkus:dev
 
 # Build executable uber-JAR (for deployment)
-./mvnw clean package -Dquarkus.package.type=uber-jar -DskipTests
+./mvnw clean package -Dquarkus.package.type=uber-jar
 
 # Standard build
 ./mvnw clean package
 ```
 
-There are no tests in this project — use `-DskipTests` when building.
+Tests are required for new features and bug fixes. Always work in TDD: write the tests first, verify they fail, then implement the feature until the tests pass. Never use `-DskipTests`.
 
 ## Deployment
 
 See `DEPLOY.md` for full instructions. Key steps:
 
 ```bash
-./mvnw clean package -Dquarkus.package.type=uber-jar -DskipTests
+./mvnw clean package -Dquarkus.package.type=uber-jar
 # Copy JAR to deploy-staging/, then:
 gcloud beta run deploy comic-trip --source target/deploy-staging/ --region europe-west9 \
   --no-build --base-image google-22/java21 --command java \

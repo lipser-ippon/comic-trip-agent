@@ -18,11 +18,12 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.FirestoreOptions;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.cloud.firestore.WriteResult;
+import com.google.cloud.storage.Storage;
 import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
@@ -36,16 +37,25 @@ public class TripService {
 
     private static final Logger LOGGER = Logger.getLogger(TripService.class);
 
-    private static final String DATABASE_ID = "comic-trip";
     private static final String COLLECTION_NAME = "trips";
 
     private final Firestore firestore;
+    private final Storage storage;
+    private final String bucketName;
+    private final String appName;
+    private final String user;
 
-    public TripService() {
-        this.firestore = FirestoreOptions.newBuilder()
-            .setDatabaseId(DATABASE_ID)
-            .build()
-            .getService();
+    public TripService(
+            Firestore firestore,
+            Storage storage,
+            @ConfigProperty(name = "comic-trip.picture.bucket") String bucketName,
+            @ConfigProperty(name = "comic-trip.app-name", defaultValue = "comic_trip_app") String appName,
+            @ConfigProperty(name = "comic-trip.user", defaultValue = "comic_trip_user") String user) {
+        this.firestore = firestore;
+        this.storage = storage;
+        this.bucketName = bucketName;
+        this.appName = appName;
+        this.user = user;
     }
 
     /**
@@ -155,16 +165,60 @@ public class TripService {
                     imageUrl = String.format("/images/%s/%s", tripId, oldImageName);
                 }
                 pictures.add(new PictureData(
-                    (String) raw.getOrDefault("fileName", ""),
-                    (String) raw.getOrDefault("description", ""),
-                    (String) raw.getOrDefault("location", ""),
-                    (String) raw.getOrDefault("mimeType", ""),
-                    imageUrl,
-                    (String) raw.getOrDefault("pointsOfInterest", "")
+                        (String) raw.getOrDefault("fileName", ""),
+                        (String) raw.getOrDefault("description", ""),
+                        (String) raw.getOrDefault("location", ""),
+                        (String) raw.getOrDefault("mimeType", ""),
+                        imageUrl,
+                        (String) raw.getOrDefault("pointsOfInterest", "")
                 ));
             }
         }
         return new TripData(tripId, title, pictures);
+    }
+
+    /**
+     * Deletes a trip from Firestore and associated images from GCS.
+     */
+    public void deleteTrip(String tripId) {
+        // 1. Get the trip data to find out which pictures to delete
+        TripData tripToDelete = getTrip(tripId);
+
+        // If trip doesn't exist, there's nothing to do
+        if (tripToDelete == null || tripToDelete.pictures().isEmpty()) {
+            LOGGER.warnf("Trip with ID %s not found or has no pictures. Skipping deletion.", tripId);
+        } else {
+            // 2. Delete images from GCS
+            for (PictureData picture : tripToDelete.pictures()) {
+                try {
+                    String gcsPath = String.format("%s/%s/%s/%s.png/0", appName, user, tripId, picture.fileName());
+                    boolean deleted = storage.delete(bucketName, gcsPath);
+                    if (deleted) {
+                        LOGGER.infof("Successfully deleted GCS object: %s/%s", bucketName, gcsPath);
+                    } else {
+                        LOGGER.warnf("Failed to delete GCS object, it might not exist: %s/%s", bucketName, gcsPath);
+                    }
+                } catch (Exception e) {
+                    // Log the exception but continue trying to delete other files and the Firestore entry
+                    LOGGER.errorf(e, "Error deleting picture %s from GCS for trip %s", picture.fileName(), tripId);
+                }
+            }
+        }
+
+        // 3. Delete the Firestore document
+        DocumentReference docRef = firestore.collection(COLLECTION_NAME).document(tripId);
+        try {
+            ApiFuture<WriteResult> result = docRef.delete();
+            result.get(); // block until deletion completes
+            LOGGER.infof("Successfully deleted Firestore document for trip ID: %s", tripId);
+        } catch (InterruptedException e) {
+            LOGGER.error("Failed to delete trip from Firestore due to interruption", e);
+            Thread.currentThread().interrupt();
+            throw new FirestorePersistenceException("Interrupted while deleting trip from Firestore", e);
+        } catch (ExecutionException e) {
+            LOGGER.error("Failed to delete trip from Firestore", e);
+            throw new FirestorePersistenceException("Failed to delete trip from Firestore", e);
+        }
     }
 
     // Data classes for template consumption
@@ -178,12 +232,12 @@ public class TripService {
     }
 
     public record PictureData(
-        String fileName,
-        String description,
-        String location,
-        String mimeType,
-        String imageUrl,
-        String pointsOfInterest
+            String fileName,
+            String description,
+            String location,
+            String mimeType,
+            String imageUrl,
+            String pointsOfInterest
     ) {
         public String locationShort() {
             if (location != null && location.contains(",")) {

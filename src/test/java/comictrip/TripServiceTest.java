@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 // Note: This test class uses direct Mockito injection because mocking the Firestore client
@@ -36,12 +37,58 @@ public class TripServiceTest {
     @Mock
     Firestore firestore;
 
-    @InjectMocks
+    @Mock
+    com.google.cloud.storage.Storage storage;
+
     TripService tripService;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+        // Manually instantiate the service with mocks and dummy config values
+        tripService = new TripService(firestore, storage, "test-bucket", "test-app", "test-user");
+    }
+
+    @Test
+    void testDeleteTrip_Success() throws ExecutionException, InterruptedException {
+        // Given
+        String tripId = "trip-to-delete";
+        String fileName1 = "pic1";
+        String fileName2 = "pic2";
+
+        var pic1 = new TripService.PictureData(fileName1, "d1", "l1", "m1", "url1", "p1");
+        var pic2 = new TripService.PictureData(fileName2, "d2", "l2", "m2", "url2", "p2");
+        var tripData = new TripService.TripData(tripId, "Test Trip", List.of(pic1, pic2));
+
+        // Since we are testing a method that calls another method in the same class (deleteTrip calls getTrip),
+        // we need to spy on the service.
+        TripService spiedTripService = org.mockito.Mockito.spy(tripService);
+        org.mockito.Mockito.doReturn(tripData).when(spiedTripService).getTrip(tripId);
+
+        // Mock Firestore interactions
+        DocumentReference docRef = mock(DocumentReference.class);
+        ApiFuture<WriteResult> deleteFuture = mock(ApiFuture.class);
+        when(docRef.delete()).thenReturn(deleteFuture);
+        when(deleteFuture.get()).thenReturn(null);
+
+        CollectionReference collectionRef = mock(CollectionReference.class);
+        when(firestore.collection(anyString())).thenReturn(collectionRef);
+        when(collectionRef.document(tripId)).thenReturn(docRef);
+
+        // Mock GCS storage interactions
+        when(storage.delete(any(String.class), any(String.class))).thenReturn(true);
+
+        // When
+        spiedTripService.deleteTrip(tripId);
+
+        // Then
+        // Verify GCS deletions happened twice
+        verify(storage, org.mockito.Mockito.times(2)).delete(any(String.class), any(String.class));
+
+        // Verify Firestore deletion still happens
+        verify(collectionRef).document(tripId);
+        verify(docRef).delete();
+        verify(deleteFuture).get();
     }
 
     @Test
@@ -147,7 +194,7 @@ public class TripServiceTest {
 
         @SuppressWarnings("unchecked")
         ApiFuture<WriteResult> future = mock(ApiFuture.class);
-        when(future.get()).thenReturn(mock(WriteResult.class));
+        when(future.get()).thenReturn(null);
 
         DocumentReference docRef = mock(DocumentReference.class);
         when(docRef.set(any(Map.class))).thenReturn(future);

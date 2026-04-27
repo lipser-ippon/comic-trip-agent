@@ -17,6 +17,7 @@ package comictrip;
 import com.google.genai.Client;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -98,6 +99,13 @@ public class MissionControlResource {
             LOGGER.error("Parallel execution failed", e);
             return Response.serverError().entity("Parallel execution failed: " + e.getMessage()).build();
         }
+    }
+
+    @DELETE
+    @Path("/trips/{tripId}")
+    public Response deleteTrip(@jakarta.ws.rs.PathParam("tripId") String tripId) {
+        tripService.deleteTrip(tripId);
+        return Response.noContent().build();
     }
 
     private static String generateId() {

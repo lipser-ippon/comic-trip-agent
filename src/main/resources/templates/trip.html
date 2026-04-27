@@ -21,6 +21,14 @@
                     </div>
                 </div>
 
+                <!-- Delete Trip Button -->
+                <div class="flex justify-end mb-8">
+                    <button id="delete-trip-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                            onclick="confirmAndDeleteTrip('{tripId}')">
+                        Supprimer ce voyage
+                    </button>
+                </div>
+
                 <!-- Comic Grid Layout -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="comic-grid">
                     {#if pictures.isEmpty}
@@ -112,6 +120,7 @@
             if (e.key === 'Escape') closeLightbox();
         });
     </script>
+    <script src="/js/delete.js"></script>
 </body>
 
 </html>

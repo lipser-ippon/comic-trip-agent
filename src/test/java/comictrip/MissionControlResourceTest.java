@@ -42,6 +42,25 @@ public class MissionControlResourceTest {
     }
 
     @Test
+    public void testDeleteTrip_Success() {
+        // Given
+        String tripId = "test-trip-to-delete";
+        ArgumentCaptor<String> tripIdCaptor = ArgumentCaptor.forClass(String.class);
+        doNothing().when(tripService).deleteTrip(tripIdCaptor.capture());
+
+        // When & Then
+        given()
+            .when()
+            .delete("/api/mission-control/trips/{tripId}", tripId)
+            .then()
+            .statusCode(204);
+
+        // Verify
+        verify(tripService).deleteTrip(tripId);
+        assertEquals(tripId, tripIdCaptor.getValue());
+    }
+
+    @Test
     public void testUploadFile_Success() {
         // Given: Mock the analyzer and service
         String fakeTripId = "xyz123";
