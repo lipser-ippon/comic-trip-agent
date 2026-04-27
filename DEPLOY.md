@@ -107,3 +107,18 @@ gcloud run services update comic-trip \
 
 Your application is now live. `gcloud` will output the service URL (e.g., `https://comic-trip-has.europe-west1.run.app`). 
 Visit this URL in your browser to verify the Comic Trip application is successfully running.
+
+## In a nutshell
+```bash
+./mvnw clean package -Dquarkus.package.type=uber-jar -DskipTests
+mkdir -p target/deploy-staging
+cp target/comic-trip-agent-1.0-SNAPSHOT-runner.jar target/deploy-staging/
+gcloud beta run deploy comic-trip \
+  --source target/deploy-staging/ \
+  --region europe-west1 \
+  --no-build \
+  --base-image google-22/java21 \
+  --command java \
+  --args="-jar,comic-trip-agent-1.0-SNAPSHOT-runner.jar" \
+  --set-env-vars="GOOGLE_CLOUD_LOCATION=europe-west1,GOOGLE_CLOUD_PROJECT=prj-s-sandbox-lipser-5013,GOOGLE_GENAI_USE_VERTEXAI=True" \
+  --allow-unauthenticated

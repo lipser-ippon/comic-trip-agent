@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 {#include fragments/head.html /}
 
@@ -14,7 +14,7 @@
                     <div class="action-box bg-yellow-400 px-8 py-4 relative">
                         <div
                             class="absolute -top-6 -left-6 bg-primary text-white text-xs font-black px-2 py-1 uppercase italic rounded">
-                            New Issue!</div>
+                            Nouveau Numéro !</div>
                         <h1 id="trip-title" class="text-slate-900 text-4xl md:text-6xl font-black uppercase italic tracking-tighter">
                             {tripTitle}
                         </h1>
@@ -25,7 +25,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="comic-grid">
                     {#if pictures.isEmpty}
                     <div class="col-span-full text-center py-10">
-                        <p class="text-xl font-bold">No panels found for this trip.</p>
+                        <p class="text-xl font-bold">Aucune planche trouvée pour ce voyage.</p>
                     </div>
                     {#else}
                     {#for pic in pictures}
@@ -73,7 +73,7 @@
             <div id="lightbox-poi" class="bg-white dark:bg-slate-900 rounded comic-border-sm p-5 w-full max-h-[25vh] overflow-y-auto">
                 <div class="flex items-center gap-2 mb-3 border-b-2 border-black pb-2">
                     <span class="material-symbols-outlined text-primary text-xl">explore_nearby</span>
-                    <h3 id="lightbox-poi-title" class="text-2xl font-black uppercase italic text-slate-900 dark:text-white">Nearby</h3>
+                    <h3 id="lightbox-poi-title" class="text-2xl font-black uppercase italic text-slate-900 dark:text-white">À proximité</h3>
                 </div>
                 <div id="lightbox-poi-content" class="text-base font-medium leading-relaxed text-slate-700 dark:text-slate-300 prose prose-base prose-slate dark:prose-invert max-w-none">
                 </div>
@@ -87,11 +87,11 @@
             const card = el.closest('[data-poi]');
             const imgSrc = el.querySelector('img').src;
             const poi = card.dataset.poi || '';
-            const location = card.dataset.location || 'Nearby';
+            const location = card.dataset.location || 'À proximité';
 
             document.getElementById('lightbox-img').src = imgSrc;
             document.getElementById('lightbox-poi-title').textContent = location;
-            document.getElementById('lightbox-poi-content').innerHTML = '<p style="font-size:1.25rem;font-weight:800;margin-bottom:0.5rem;">Nearby Points of Interest:</p>' + marked.parse(poi || 'No points of interest found.');
+            document.getElementById('lightbox-poi-content').innerHTML = '<p style="font-size:1.25rem;font-weight:800;margin-bottom:0.5rem;">Points d\'intérêt à proximité :</p>' + marked.parse(poi || 'Aucun point d\'intérêt trouvé.');
 
             const lightbox = document.getElementById('lightbox');
             lightbox.classList.remove('hidden');

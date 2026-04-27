@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 {#include fragments/head.html /}
 
@@ -15,15 +15,14 @@
                         <div class="space-y-6">
                             <div
                                 class="inline-block bg-primary text-white px-4 py-1 comic-border-sm -rotate-2 font-black uppercase text-xl">
-                                Mission Control
+                                Centre de Mission
                             </div>
                             <h1
                                 class="text-6xl font-black leading-none tracking-tighter text-slate-900 dark:text-white uppercase hero-text italic">
-                                Immortalize Your <br /> <span class="text-primary">Travel Legend</span>
+                                Immortalisez Votre <br /> <span class="text-primary">Légende de Voyage</span>
                             </h1>
                             <p class="text-lg font-bold text-slate-700 dark:text-slate-300 max-w-lg">
-                                Turn your mundane vacation photos into epic comic book panels! Just drop your files and
-                                let our AI illustrators do the heavy lifting.
+                                Transformez vos banales photos de vacances en planches de bande dessinée épiques ! Déposez simplement vos fichiers et laissez nos illustrateurs IA faire le plus gros du travail.
                             </p>
                         </div>
                         <!-- Dropzone -->
@@ -37,17 +36,15 @@
                                     class="bg-primary text-white p-6 rounded-full comic-border-sm scale-110 mb-4 transition-all">
                                     <span class="material-symbols-outlined text-5xl">chat_bubble</span>
                                 </div>
-                                <h3 id="upload-status-title" class="text-2xl font-black uppercase italic">Upload Your
-                                    Adventure</h3>
-                                <p id="upload-status-msg" class="text-sm font-bold opacity-75">JPEG, PNG or RAW • Max
-                                    50MB</p>
+                                <h3 id="upload-status-title" class="text-2xl font-black uppercase italic">Téléchargez Votre Aventure</h3>
+                                <p id="upload-status-msg" class="text-sm font-bold opacity-75">JPEG, PNG ou RAW • 50Mo Max</p>
 
                                 <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
                                 <button id="upload-btn"
                                     class="bg-primary text-white font-black px-10 py-4 comic-border-sm uppercase text-lg hover:scale-105 transition-transform">
-                                    Select Files
+                                    Sélectionner des fichiers
                                 </button>
-                                <p class="text-xs font-bold uppercase pt-2">...or drag 'em here, hero!</p>
+                                <p class="text-xs font-bold uppercase pt-2">...ou glissez-les ici, héros !</p>
                             </div>
                         </div>
                     </div>
@@ -58,7 +55,7 @@
                 <!-- History Section -->
                 <section>
                     <div class="flex items-center justify-between mb-10 border-b-4 border-black pb-4">
-                        <h2 class="text-4xl font-black uppercase italic tracking-tight">Past Expeditions</h2>
+                        <h2 class="text-4xl font-black uppercase italic tracking-tight">Expéditions Passées</h2>
                         <div class="flex gap-2">
                             <button class="p-2 comic-border-sm bg-white text-black"><span
                                     class="material-symbols-outlined">grid_view</span></button>
@@ -74,7 +71,7 @@
                                     src="{trip.firstImageUrl}" />
                                 <div
                                     class="absolute top-4 left-4 bg-accent-yellow text-black font-black px-3 py-1 comic-border-sm uppercase text-xs">
-                                    Completed
+                                    Terminé
                                 </div>
                                 <div
                                     class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent">
@@ -92,8 +89,8 @@
                             <div
                                 class="relative overflow-hidden border-4 border-dashed border-black bg-slate-100 dark:bg-slate-800 aspect-[4/5] flex flex-col items-center justify-center p-10 text-center grayscale hover:grayscale-0 transition-all">
                                 <span class="material-symbols-outlined text-6xl text-primary mb-4">add_circle</span>
-                                <p class="text-xl font-black uppercase italic">Start New Volume</p>
-                                <p class="text-sm font-bold opacity-60">Your next adventure awaits!</p>
+                                <p class="text-xl font-black uppercase italic">Commencer un Nouveau Volume</p>
+                                <p class="text-sm font-bold opacity-60">Votre prochaine aventure vous attend !</p>
                             </div>
                         </a>
                     </div>
