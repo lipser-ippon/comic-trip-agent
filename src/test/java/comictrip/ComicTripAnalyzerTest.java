@@ -1,6 +1,5 @@
 package comictrip;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
@@ -22,25 +21,37 @@ public class ComicTripAnalyzerTest {
     // if it were refactored into its own public or package-private method.
 
     @Test
-    void testComicDetailsParsing() throws Exception {
-        // This is a hypothetical test for the JSON parsing logic inside `analyzeComic`.
-        // To make this testable, the parsing logic should be extracted to a dedicated method.
-
-        // Given
+    void testParseDescriptionAndLocation_plainJson() throws Exception {
         String jsonFromLLM = """
                 {"description": "La tour Eiffel vue du Champ de Mars", "location": "Tour Eiffel, Paris, France"}
                 """;
-        ObjectMapper objectMapper = new ObjectMapper();
 
-        // When
-        // For demonstration, we'll replicate the logic here:
-        String jsonToParse = jsonFromLLM.trim();
-        ComicOutput.Details details = objectMapper.readValue(jsonToParse, ComicOutput.Details.class);
+        ComicOutput.Details details = ComicTripAnalyzer.parseDescriptionAndLocation(jsonFromLLM);
 
-
-        // Then
         assertNotNull(details);
         assertEquals("La tour Eiffel vue du Champ de Mars", details.description());
         assertEquals("Tour Eiffel, Paris, France", details.location());
+    }
+
+    @Test
+    void testParseDescriptionAndLocation_withJsonCodeFence() throws Exception {
+        String jsonFromLLM = "```json\n{\"description\": \"La tour Eiffel\", \"location\": \"Paris, France\"}\n```";
+
+        ComicOutput.Details details = ComicTripAnalyzer.parseDescriptionAndLocation(jsonFromLLM);
+
+        assertNotNull(details);
+        assertEquals("La tour Eiffel", details.description());
+        assertEquals("Paris, France", details.location());
+    }
+
+    @Test
+    void testParseDescriptionAndLocation_withPlainCodeFence() throws Exception {
+        String jsonFromLLM = "```\n{\"description\": \"Le Louvre\", \"location\": \"Paris, France\"}\n```";
+
+        ComicOutput.Details details = ComicTripAnalyzer.parseDescriptionAndLocation(jsonFromLLM);
+
+        assertNotNull(details);
+        assertEquals("Le Louvre", details.description());
+        assertEquals("Paris, France", details.location());
     }
 }

@@ -20,6 +20,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -27,13 +28,11 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.jspecify.annotations.Nullable;
-import org.sqids.Sqids;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
@@ -50,6 +49,9 @@ public class MissionControlResource {
 
     @Inject
     Client client;
+
+    @Inject
+    IdGenerator idGenerator;
 
     @POST
     @Path("/upload")
@@ -77,10 +79,10 @@ public class MissionControlResource {
                     .toList();
         } catch (Exception e) {
             LOGGER.error("Error during file ingestion", e);
-            return Response.serverError().entity("Error during file ingestion: " + e.getMessage()).build();
+            return Response.serverError().entity("Error during file ingestion").build();
         }
 
-        String tripId = generateId();
+        String tripId = idGenerator.generateId();
 
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             var futures = filesToProcess.stream()
@@ -100,20 +102,15 @@ public class MissionControlResource {
             return Response.ok(Map.of("tripId", tripId, "title", tripTitle, "pictures", comicOutputs)).build();
         } catch (Exception e) {
             LOGGER.error("Parallel execution failed", e);
-            return Response.serverError().entity("Parallel execution failed: " + e.getMessage()).build();
+            return Response.serverError().entity("Parallel execution failed").build();
         }
     }
 
     @DELETE
     @Path("/trips/{tripId}")
-    public Response deleteTrip(@jakarta.ws.rs.PathParam("tripId") String tripId) {
+    public Response deleteTrip(@PathParam("tripId") String tripId) {
         tripService.deleteTrip(tripId);
         return Response.noContent().build();
-    }
-
-    private static String generateId() {
-        Sqids sqids = Sqids.builder().build();
-        return sqids.encode(List.of(new Random().nextLong(0, Integer.MAX_VALUE)));
     }
 
     private @Nullable String createTripName(List<ComicOutput> results) {
@@ -121,13 +118,17 @@ public class MissionControlResource {
                 .map(r -> r.details() != null && r.details().description() != null ? r.details().description() : "")
                 .collect(java.util.stream.Collectors.joining("\n"));
 
-        String tripTitle = client.models.generateContent(
-                "gemini-2.5-flash-lite", """
-                         Donne un titre court et accrocheur, dans le style bande dessinée (max 5 mots), pour un voyage basé sur ces descriptions de photos.
-                        Affiche UNIQUEMENT le titre :
-                        """ + combinedDescriptions,
-                com.google.genai.types.GenerateContentConfig.builder().build()
-        ).text();
-        return tripTitle;
+        try {
+            return client.models.generateContent(
+                    "gemini-2.5-flash-lite", """
+                             Donne un titre court et accrocheur, dans le style bande dessinée (max 5 mots), pour un voyage basé sur ces descriptions de photos.
+                            Affiche UNIQUEMENT le titre :
+                            """ + combinedDescriptions,
+                    com.google.genai.types.GenerateContentConfig.builder().build()
+            ).text();
+        } catch (Exception e) {
+            LOGGER.error("Failed to generate trip title", e);
+            return "Voyage sans titre";
+        }
     }
 }

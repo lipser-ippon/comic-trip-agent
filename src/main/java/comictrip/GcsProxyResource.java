@@ -3,6 +3,7 @@ package comictrip;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -27,10 +28,7 @@ public class GcsProxyResource {
 
     @GET
     @Path("/{tripId}/{imageName}")
-    public Uni<Response> getImage(
-        @PathParam("tripId") String tripId,
-        @PathParam("imageName") String imageName
-    ) {
+    public Uni<Response> getImage(@PathParam("tripId") String tripId, @PathParam("imageName") String imageName) {
         return Uni.createFrom().item(() -> {
             String gcsPath = String.format("%s/%s/%s/%s.png/0", appName, user, tripId, imageName);
             Blob blob = storage.get(bucketName, gcsPath);
@@ -42,10 +40,8 @@ public class GcsProxyResource {
             // Streaming direct du contenu vers la réponse HTTP
             Response.ResponseBuilder response = Response.ok((jakarta.ws.rs.core.StreamingOutput) blob::downloadTo);
 
-            return response
-                .type(blob.getContentType())
-                .header("Cache-Control", "public, max-age=31536000") // Cache 1 an
-                .build();
-        });
+            return response.type(blob.getContentType()).header("Cache-Control", "public, max-age=31536000") // Cache 1 an
+                    .build();
+        }).emitOn(Infrastructure.getDefaultWorkerPool());
     }
 }

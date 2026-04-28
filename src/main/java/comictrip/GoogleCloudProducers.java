@@ -15,7 +15,6 @@ public class GoogleCloudProducers {
     @Produces
     @ApplicationScoped
     public Firestore firestore() {
-        // This is the same logic that was in the TripService constructor
         return FirestoreOptions.newBuilder()
                 .setDatabaseId(DATABASE_ID)
                 .build()

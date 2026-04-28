@@ -37,7 +37,6 @@ import java.util.concurrent.ExecutionException;
 public class TripService {
 
     private static final Logger LOGGER = Logger.getLogger(TripService.class);
-
     private static final String COLLECTION_NAME = "trips";
 
     private final Firestore firestore;
@@ -149,22 +148,6 @@ public class TripService {
         if (rawPictures != null) {
             for (Map<String, Object> raw : rawPictures.pictures()) {
                 String imageUrl = (String) raw.getOrDefault("imageUrl", "");
-                if (imageUrl.startsWith("https://storage.googleapis.com/")) {
-                    // Old format: full GCS URL → convert to proxy URL
-                    // https://storage.googleapis.com/{bucket}/comic_trip_app/comic_trip_user/{tripId}/{imageId}.png/0
-                    int bucketEnd = imageUrl.indexOf('/', "https://storage.googleapis.com/".length());
-                    if (bucketEnd != -1) {
-                        String[] parts = imageUrl.substring(bucketEnd + 1).split("/");
-                        // parts: [comic_trip_app, comic_trip_user, tripId, imageId.png, 0]
-                        if (parts.length >= 4) {
-                            String imageName = parts[3].replace(".png", "");
-                            imageUrl = String.format("/images/%s/%s", tripId, imageName);
-                        }
-                    }
-                } else if (imageUrl.startsWith("/images/") && imageUrl.indexOf('/', 8) == -1) { // 8 is the length of "/images/"
-                    String oldImageName = imageUrl.substring("/images/".length());
-                    imageUrl = String.format("/images/%s/%s", tripId, oldImageName);
-                }
                 pictures.add(new PictureData(
                         (String) raw.getOrDefault("fileName", ""),
                         (String) raw.getOrDefault("description", ""),

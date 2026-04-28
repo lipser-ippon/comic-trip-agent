@@ -50,6 +50,14 @@ public class ComicTripAnalyzer {
     @ConfigProperty(name = "comic-trip.user", defaultValue = "comic_trip_user")
     String user;
 
+    static ComicOutput.Details parseDescriptionAndLocation(String raw) throws JsonProcessingException {
+        String jsonToParse = raw.trim();
+        if (jsonToParse.startsWith("```")) {
+            jsonToParse = jsonToParse.replaceAll("^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").trim();
+        }
+        return OBJECT_MAPPER.readValue(jsonToParse, ComicOutput.Details.class);
+    }
+
     public ComicOutput analyzeComic(byte[] imageBytes, String mimeType, String tripId) {
 
         SessionKey sessionKey = new SessionKey(appName, user, tripId);
@@ -76,12 +84,7 @@ public class ComicTripAnalyzer {
         ComicOutput.Image image = new ComicOutput.Image(imageId, null, "image/png");
 
         try {
-            String jsonToParse = descriptionAndLocation.trim();
-            if (jsonToParse.startsWith("```")) {
-                jsonToParse = jsonToParse.replaceAll("^```[a-zA-Z]*\\\\n?", "").replaceAll("```$", "").trim();
-            }
-            ComicOutput.Details details = OBJECT_MAPPER.readValue(jsonToParse,
-                ComicOutput.Details.class);
+            ComicOutput.Details details = parseDescriptionAndLocation(descriptionAndLocation);
             return new ComicOutput(tripId, image, details, pointsOfInterest);
         } catch (JsonProcessingException e) {
             LOGGER.error("Failed to parse comic trip details", e);

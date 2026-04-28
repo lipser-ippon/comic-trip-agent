@@ -76,15 +76,11 @@ public class WebResourceTest {
         String tripId = "nonExistentTrip";
         when(tripService.getTrip(tripId)).thenReturn(null);
 
-        // When & Then: We access a non-existent trip page
+        // When & Then: We access a non-existent trip page — expect 404
         given()
             .pathParam("tripId", tripId)
             .when().get("/trips/{tripId}")
             .then()
-            .statusCode(200) // The resource handles null and returns a default page
-            .contentType("text/html;charset=UTF-8")
-            .body(
-                containsString("Trip " + tripId) // It should display a default title
-            );
+            .statusCode(404);
     }
 }

@@ -18,6 +18,7 @@ import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -53,15 +54,16 @@ public class WebResource {
     public TemplateInstance trip(@PathParam("tripId") String tripId) {
         TripService.TripData tripData = tripService.getTrip(tripId);
 
-        String title = tripData != null && tripData.title() != null
-            ? tripData.title() : "Trip " + tripId;
-        List<TripService.PictureData> pictures = tripData != null
-            ? tripData.pictures() : List.of();
+        if (tripData == null) {
+            throw new NotFoundException("Trip not found: " + tripId);
+        }
+
+        String title = tripData.title() != null ? tripData.title() : "Trip " + tripId;
 
         return trip
             .data("pageTitle", "Comic Trip | " + title)
             .data("tripId", tripId)
             .data("tripTitle", title)
-            .data("pictures", pictures);
+            .data("pictures", tripData.pictures());
     }
 }
