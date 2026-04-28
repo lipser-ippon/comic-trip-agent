@@ -1,4 +1,4 @@
-package comictrip;
+package comictrip.infrastructure;
 
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.FirestoreOptions;
@@ -8,7 +8,7 @@ import jakarta.enterprise.inject.Produces;
 import org.sqids.Sqids;
 
 @ApplicationScoped
-public class GoogleCloudProducers {
+public class GoogleCloudConfig {
 
     private static final String DATABASE_ID = "comic-trip";
 

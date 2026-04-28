@@ -1,4 +1,4 @@
-package comictrip;
+package comictrip.infrastructure;
 
 import com.google.adk.apps.App;
 import com.google.cloud.storage.Storage;
@@ -16,13 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Unit tests for AdkProducers.
- *
- * Note: the afterModelCallback lambda cannot be tested here without running the full
- * ADK runtime. A future integration test with a mocked GCS + ADK runner would be
- * needed to verify the "no local file leak" behavior end-to-end.
+ * Unit tests for AdkConfig.
  */
-class AdkProducersTest {
+class AdkConfigTest {
 
     @Mock
     Storage storage;
@@ -30,24 +26,24 @@ class AdkProducersTest {
     @Mock
     IdGenerator idGenerator;
 
-    AdkProducers adkProducers;
+    AdkConfig adkConfig;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        adkProducers = new AdkProducers();
-        adkProducers.storage = storage;
-        adkProducers.idGenerator = idGenerator;
-        adkProducers.comicTripPictureBucket = "test-bucket";
-        adkProducers.appName = "test_app";
-        adkProducers.pictureAnalyserAgentModel = "gemini-2.5-flash";
-        adkProducers.comicIllustratorAgentModel = "gemini-2.5-flash-image";
-        adkProducers.pointOfInterestAgentModel = "gemini-2.5-flash";
+        adkConfig = new AdkConfig();
+        adkConfig.storage = storage;
+        adkConfig.idGenerator = idGenerator;
+        adkConfig.comicTripPictureBucket = "test-bucket";
+        adkConfig.appName = "test_app";
+        adkConfig.pictureAnalyserAgentModel = "gemini-2.5-flash";
+        adkConfig.comicIllustratorAgentModel = "gemini-2.5-flash-image";
+        adkConfig.pointOfInterestAgentModel = "gemini-2.5-flash";
     }
 
     @Test
     void comicTripApp_buildsSuccessfully() {
-        App app = adkProducers.comicTripApp();
+        App app = adkConfig.comicTripApp();
         assertNotNull(app);
     }
 
@@ -56,7 +52,7 @@ class AdkProducersTest {
         Path workingDir = Path.of(".");
         long pngCountBefore = countPngFiles(workingDir);
 
-        adkProducers.comicTripApp();
+        adkConfig.comicTripApp();
 
         long pngCountAfter = countPngFiles(workingDir);
         assertEquals(pngCountBefore, pngCountAfter,

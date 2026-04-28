@@ -1,4 +1,4 @@
-package comictrip;
+package comictrip.infrastructure;
 
 import com.google.adk.agents.LlmAgent;
 import com.google.adk.agents.ParallelAgent;
@@ -23,14 +23,14 @@ import org.jboss.logging.Logger;
 import java.util.List;
 import java.util.Optional;
 
-import static comictrip.Constants.OUTPUT_KEY_COMIC_ILLUSTRATION;
-import static comictrip.Constants.OUTPUT_KEY_DESCRIPTION_AND_LOCATION;
-import static comictrip.Constants.OUTPUT_KEY_POINTS_OF_INTEREST;
+import static comictrip.infrastructure.AdkConstants.OUTPUT_KEY_COMIC_ILLUSTRATION;
+import static comictrip.infrastructure.AdkConstants.OUTPUT_KEY_DESCRIPTION_AND_LOCATION;
+import static comictrip.infrastructure.AdkConstants.OUTPUT_KEY_POINTS_OF_INTEREST;
 
 @ApplicationScoped
-public class AdkProducers {
+public class AdkConfig {
 
-    private static final Logger LOGGER = Logger.getLogger(AdkProducers.class);
+    private static final Logger LOGGER = Logger.getLogger(AdkConfig.class);
 
     @Inject
     Storage storage;
@@ -58,9 +58,9 @@ public class AdkProducers {
                             Analyse l'image et retourne :
                             - une description détaillée du contenu de l'image
                             - le lieu où cette photo a probablement été prise
-                        
+
                             Retourne le résultat au format JSON, sans aucun commentaire ni balise de bloc de code Markdown, sous la forme :
-                        
+
                             {"description": "La tour Eiffel depuis le Champ de Mars par une journée ensoleillée",
                             "location": "Tour Eiffel, Paris, France"}
                         """)
@@ -111,11 +111,11 @@ public class AdkProducers {
                 .model(pointOfInterestAgentModel)
                 .instruction("""
                             Étant donné l'emplacement à {description_and_location}
-                        
+
                             Dresse une liste des points d'intérêt (POI) dans les environs, à une distance maximale d'un kilomètre.
-                        
+
                             Chaque POI doit comporter un nom et une description.
-                        
+
                             Ne mentionne pas les distances dans ta réponse. Ne commence pas la liste par un texte d'introduction.
                         """)
                 .outputKey(OUTPUT_KEY_POINTS_OF_INTEREST)

@@ -1,4 +1,4 @@
-package comictrip;
+package comictrip.infrastructure;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import org.sqids.Sqids;

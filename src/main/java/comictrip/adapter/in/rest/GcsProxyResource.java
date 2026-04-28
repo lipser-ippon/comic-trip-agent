@@ -1,4 +1,4 @@
-package comictrip;
+package comictrip.adapter.in.rest;
 
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
@@ -37,10 +37,10 @@ public class GcsProxyResource {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
 
-            // Streaming direct du contenu vers la réponse HTTP
             Response.ResponseBuilder response = Response.ok((jakarta.ws.rs.core.StreamingOutput) blob::downloadTo);
-
-            return response.type(blob.getContentType()).header("Cache-Control", "public, max-age=31536000") // Cache 1 an
+            return response
+                    .type(blob.getContentType())
+                    .header("Cache-Control", "public, max-age=31536000")
                     .build();
         }).emitOn(Infrastructure.getDefaultWorkerPool());
     }
