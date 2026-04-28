@@ -37,7 +37,7 @@ This is a Quarkus (Java 21) web app that transforms travel photos into pop-art c
 
 ### Request Flow
 
-`POST /api/mission-control/upload` (multipart) → `MissionControlResource` → virtual threads (one per image) → `ComicTripAnalyzer` → ADK multi-agent pipeline → results saved to Firestore + GCS → returned to caller
+`POST /api/upload` (multipart) → `MissionControlResource` → virtual threads (one per image) → `ComicTripAnalyzer` → ADK multi-agent pipeline → results saved to Firestore + GCS → returned to caller
 
 The web UI at `/` and `/trips/{tripId}` renders results via Qute templates, reading from Firestore via `TripService`.
 

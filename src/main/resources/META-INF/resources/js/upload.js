@@ -64,7 +64,7 @@ async function handleFiles(files) {
     }
 
     try {
-        const response = await fetch('/api/mission-control/upload', {
+        const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData
         });

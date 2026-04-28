@@ -37,7 +37,7 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
-@Path("/api/mission-control")
+@Path("/api")
 public class MissionControlResource {
 
     private static final Logger LOGGER = Logger.getLogger(MissionControlResource.class);

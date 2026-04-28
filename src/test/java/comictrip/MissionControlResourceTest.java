@@ -51,7 +51,7 @@ public class MissionControlResourceTest {
         // When & Then
         given()
             .when()
-            .delete("/api/mission-control/trips/{tripId}", tripId)
+            .delete("/api/trips/{tripId}", tripId)
             .then()
             .statusCode(204);
 
@@ -85,7 +85,7 @@ public class MissionControlResourceTest {
         given()
             .multiPart("file", tempFile, "image/jpeg")
             .when()
-            .post("/api/mission-control/upload")
+            .post("/api/upload")
             .then()
             .statusCode(200)
             .contentType(ContentType.JSON)
@@ -109,7 +109,7 @@ public class MissionControlResourceTest {
         given()
             .contentType(ContentType.MULTIPART) // Explicitly set content type
             .when()
-            .post("/api/mission-control/upload")
+            .post("/api/upload")
             .then()
             .statusCode(400); // Expecting Bad Request
     }

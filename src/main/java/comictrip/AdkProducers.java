@@ -20,12 +20,12 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Optional;
+
+import static comictrip.Constants.OUTPUT_KEY_COMIC_ILLUSTRATION;
+import static comictrip.Constants.OUTPUT_KEY_DESCRIPTION_AND_LOCATION;
+import static comictrip.Constants.OUTPUT_KEY_POINTS_OF_INTEREST;
 
 @ApplicationScoped
 public class AdkProducers {
@@ -45,10 +45,8 @@ public class AdkProducers {
     String pictureAnalyserAgentModel;
     @ConfigProperty(name = "comic_illustrator_agent_model", defaultValue = "gemini-2.5-flash-image")
     String comicIllustratorAgentModel;
-    
-    private static final String OUTPUT_KEY_COMIC_ILLUSTRATION = "comic_illustration";
-    private static final String OUTPUT_KEY_DESCRIPTION_AND_LOCATION = "description_and_location";
-    private static final String OUTPUT_KEY_POINTS_OF_INTEREST = "points_of_interest";
+    @ConfigProperty(name = "point_of_interest_agent_model", defaultValue = "gemini-2.5-flash")
+    String pointOfInterestAgentModel;
 
     @Produces
     @ApplicationScoped
@@ -57,15 +55,15 @@ public class AdkProducers {
                 .model(pictureAnalyserAgentModel)
                 .name("picture_analyzer_agent")
                 .instruction("""
-                    Analyse l'image et retourne :
-                    - une description détaillée du contenu de l'image
-                    - le lieu où cette photo a probablement été prise
-                
-                    Retourne le résultat au format JSON, sans aucun commentaire ni balise de bloc de code Markdown, sous la forme :
-                
-                    {"description": "La tour Eiffel depuis le Champ de Mars par une journée ensoleillée",
-                    "location": "Tour Eiffel, Paris, France"}
-                """)
+                            Analyse l'image et retourne :
+                            - une description détaillée du contenu de l'image
+                            - le lieu où cette photo a probablement été prise
+                        
+                            Retourne le résultat au format JSON, sans aucun commentaire ni balise de bloc de code Markdown, sous la forme :
+                        
+                            {"description": "La tour Eiffel depuis le Champ de Mars par une journée ensoleillée",
+                            "location": "Tour Eiffel, Paris, France"}
+                        """)
                 .outputKey(OUTPUT_KEY_DESCRIPTION_AND_LOCATION)
                 .build();
 
@@ -73,9 +71,9 @@ public class AdkProducers {
                 .model(comicIllustratorAgentModel)
                 .name("comic_illustrator_agent")
                 .instruction("""
-                Transforme cette photographie en une case de bande dessinée pop-art, avec des contours noirs épais, des gouttes de couleur, des éclaboussures et des traits larges ou des formes géométriques. Utilise des textures en simili-gravure (halftone) pour les zones qui ne sont pas en couleurs primaires, ainsi qu'une palette de couleurs vintage aux tons atténués. Une légende devra décrire le lieu, tel qu'indiqué dans :
-                {description_and_location}
-                """)
+                        Transforme cette photographie en une case de bande dessinée pop-art, avec des contours noirs épais, des gouttes de couleur, des éclaboussures et des traits larges ou des formes géométriques. Utilise des textures en simili-gravure (halftone) pour les zones qui ne sont pas en couleurs primaires, ainsi qu'une palette de couleurs vintage aux tons atténués. Une légende devra décrire le lieu, tel qu'indiqué dans :
+                        {description_and_location}
+                        """)
                 .generateContentConfig(GenerateContentConfig.builder()
                         .responseModalities("IMAGE")
                         .build())
@@ -94,9 +92,7 @@ public class AdkProducers {
                     }
 
                     Part part = imagePart.get();
-                    byte[] comicImageBytes = part.inlineData().get().data().get();
                     String imageId = idGenerator.generateId();
-                    saveFileLocally(imageId, comicImageBytes);
 
                     try {
                         callbackContext.saveArtifact(imageId + ".png", part).blockingAwait();
@@ -112,27 +108,27 @@ public class AdkProducers {
 
         LlmAgent poiGoogleMapsAgent = LlmAgent.builder()
                 .name("points_of_interest_agent")
-                .model("gemini-2.5-flash")
+                .model(pointOfInterestAgentModel)
                 .instruction("""
-                    Étant donné l'emplacement à {description_and_location}
-                    
-                    Dresse une liste des points d'intérêt (POI) dans les environs, à une distance maximale d'un kilomètre.
-
-                    Chaque POI doit comporter un nom et une description.
-
-                    Ne mentionne pas les distances dans ta réponse. Ne commence pas la liste par un texte d'introduction.
-                """)
+                            Étant donné l'emplacement à {description_and_location}
+                        
+                            Dresse une liste des points d'intérêt (POI) dans les environs, à une distance maximale d'un kilomètre.
+                        
+                            Chaque POI doit comporter un nom et une description.
+                        
+                            Ne mentionne pas les distances dans ta réponse. Ne commence pas la liste par un texte d'introduction.
+                        """)
                 .outputKey(OUTPUT_KEY_POINTS_OF_INTEREST)
                 .build();
 
-        ParallelAgent poiAndCommicFlow = ParallelAgent.builder()
+        ParallelAgent poiAndComicFlow = ParallelAgent.builder()
                 .name("poi_and_comic_flow")
                 .subAgents(poiGoogleMapsAgent, comicCreatorAgent)
                 .build();
 
         SequentialAgent mainFlow = SequentialAgent.builder()
                 .name("main_flow")
-                .subAgents(comicTripAgent, poiAndCommicFlow)
+                .subAgents(comicTripAgent, poiAndComicFlow)
                 .build();
 
         return App.builder()
@@ -141,23 +137,13 @@ public class AdkProducers {
                 .rootAgent(mainFlow)
                 .build();
     }
-    
-    private static void saveFileLocally(String imageId, byte[] comicImageBytes) {
-        try {
-            Files.write(Path.of(imageId + ".png"),
-                comicImageBytes,
-                StandardOpenOption.CREATE);
-        } catch (IOException e) {
-            LOGGER.error("Failed to save file locally", e);
-        }
-    }
-    
+
     @Produces
     @ApplicationScoped
     public GcsArtifactService gcsArtifactService(Storage storage) {
         return new GcsArtifactService(comicTripPictureBucket, storage);
     }
-    
+
     @Produces
     @ApplicationScoped
     public InMemorySessionService inMemorySessionService() {

@@ -30,6 +30,10 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import java.util.Map;
 
+import static comictrip.Constants.OUTPUT_KEY_COMIC_ILLUSTRATION;
+import static comictrip.Constants.OUTPUT_KEY_DESCRIPTION_AND_LOCATION;
+import static comictrip.Constants.OUTPUT_KEY_POINTS_OF_INTEREST;
+
 @ApplicationScoped
 public class ComicTripAnalyzer {
 
@@ -45,10 +49,6 @@ public class ComicTripAnalyzer {
     String appName;
     @ConfigProperty(name = "comic-trip.user", defaultValue = "comic_trip_user")
     String user;
-    
-    private static final String OUTPUT_KEY_COMIC_ILLUSTRATION = "comic_illustration";
-    private static final String OUTPUT_KEY_DESCRIPTION_AND_LOCATION = "description_and_location";
-    private static final String OUTPUT_KEY_POINTS_OF_INTEREST = "points_of_interest";
 
     public ComicOutput analyzeComic(byte[] imageBytes, String mimeType, String tripId) {
 

@@ -3,7 +3,7 @@ async function confirmAndDeleteTrip(tripId) {
 
     if (confirmation === 'SUPPRIMER') {
         try {
-            const response = await fetch(`/api/mission-control/trips/${tripId}`, {
+            const response = await fetch(`/api/trips/${tripId}`, {
                 method: 'DELETE'
             });
 
