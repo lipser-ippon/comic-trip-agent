@@ -58,9 +58,9 @@ public class AdkConfig {
                             Analyse l'image et retourne :
                             - une description détaillée du contenu de l'image
                             - le lieu où cette photo a probablement été prise
-
+                        
                             Retourne le résultat au format JSON, sans aucun commentaire ni balise de bloc de code Markdown, sous la forme :
-
+                        
                             {"description": "La tour Eiffel depuis le Champ de Mars par une journée ensoleillée",
                             "location": "Tour Eiffel, Paris, France"}
                         """)
@@ -71,8 +71,30 @@ public class AdkConfig {
                 .model(comicIllustratorAgentModel)
                 .name("comic_illustrator_agent")
                 .instruction("""
-                        Transforme cette photographie en une case de bande dessinée pop-art, avec des contours noirs épais, des gouttes de couleur, des éclaboussures et des traits larges ou des formes géométriques. Utilise des textures en simili-gravure (halftone) pour les zones qui ne sont pas en couleurs primaires, ainsi qu'une palette de couleurs vintage aux tons atténués. Une légende devra décrire le lieu, tel qu'indiqué dans :
-                        {description_and_location}
+                        **CORE TASK: VINTAGE COMIC TRANSFORMATION**
+                        
+                        1. OBJECTIVE:
+                           Transform the provided photograph into a highly stylized 1950s comic book panel.
+                           CRITICAL: Do NOT maintain photographic realism. The output must look hand-drawn.
+                        
+                        2. LINEWORK & TEXTURE:
+                           - Apply thick, deliberate black ink outlines (variable weight).
+                           - Use Ben-Day/Halftone dot patterns extensively for shading and background areas.
+                           - Incorporate visible brushstrokes and ink splashes to simulate a physical medium.
+                        
+                        3. COLOR PALETTE:
+                           - Use a classic 'Four-Color' (CMYK) offset print aesthetic.
+                           - Favor vibrant primary colors mixed with muted, aged paper tones (off-white/cream).
+                           - Shadows should be rendered via cross-hatching, not smooth gradients.
+                        
+                        4. COMPOSITION & LANGUAGE:
+                           - Frame this as a single action-oriented panel.
+                           - Place a rectangular yellow caption box in the top-left corner.
+                           - MANDATORY LANGUAGE: All text in the image (captions, bubbles, etc.) MUST be in FRENCH.
+                           - CAPTION CONTENT (TRANSLATE TO FRENCH IF NECESSARY): {description_and_location}
+                        
+                        5. FINAL DIRECTIVE:
+                           The result should be indistinguishable from a scan of a vintage comic book.
                         """)
                 .generateContentConfig(GenerateContentConfig.builder()
                         .responseModalities("IMAGE")
@@ -111,11 +133,11 @@ public class AdkConfig {
                 .model(pointOfInterestAgentModel)
                 .instruction("""
                             Étant donné l'emplacement à {description_and_location}
-
+                        
                             Dresse une liste des points d'intérêt (POI) dans les environs, à une distance maximale d'un kilomètre.
-
+                        
                             Chaque POI doit comporter un nom et une description.
-
+                        
                             Ne mentionne pas les distances dans ta réponse. Ne commence pas la liste par un texte d'introduction.
                         """)
                 .outputKey(OUTPUT_KEY_POINTS_OF_INTEREST)
